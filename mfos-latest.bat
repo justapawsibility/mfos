@@ -1,13 +1,14 @@
 ::  Source code of MicroflashOS
 ::  A "fantasy operating system" made by KNBnoob1!
-:: With help from nglammm and nightlyDevice!
 ::  Website: https://knbn1.github.io
+
+:: Contributors: nightlydevice, nglammm, justapawsibility
 
 @echo off
 
 :: Define some version strings
 
-set "mfosVer=2026.05.16"
+set "mfosVer=2026.05.27"
 set "fbVer=5.2"
 set "pkgRepo=GigaflashOS Unified Repository [Revision 2]"
 
@@ -520,6 +521,10 @@ if exist "%disk0p1%/mfpkg.mcm" (
     if exist "%pkgDir%/mountvirt.mfp" (
         echo mountvirt [disk name]: Mount and boot to a system disk of your choice
         echo [mfpkg] INFO: found package /%userData%/%user%/%userSysData%/packages/mountvirt.mfp >>"%logfile%"
+    )
+    if exist "%pkgDir%/cowsay.mfp" (
+        echo cowsay: Make a cow say something
+        echo [mfpkg] INFO: found package /%userData%/%user%/%userSysData%/packages/cowsay.mfp >>"%logfile%"
     )
 )
 goto execdone
@@ -1101,6 +1106,7 @@ if "%1"=="available" (
     echo ID 004: nuke
     echo ID 005: MicroflashOS Dumper
     echo ID 006: Virtual System Disk Mounter
+    echo ID 007: cowsay 
     echo [mfpkg] INFO: showing details for repository "%pkgRepo%" >>"%logfile%"
     goto execdone
 )
@@ -1251,6 +1257,18 @@ echo %pkgRepo%>"%pkgMeta%/006-mountvirt"
 if not exist "%pkgMeta%/006-mountvirt" (goto inregfail)
 goto instdone
 
+:mfpkg-dl-006
+if not exist "%disk0p1%/mfpkg.mcm" (goto nocommand)
+title MicroflashOS Package Manager
+echo Downloading cowsay (pID 007)
+echo [mfpkg] INFO: downloading %pkgtarget% >>"%logfile%"
+echo.
+echo cowsay by justapawsibility>"%pkgDir%/cowsay.mfp"
+if not exist "%pkgDir%/cowsay.mfp" (goto insfail)
+echo %pkgRepo%>"%pkgMeta%/007-cowsay"
+if not exist "%pkgMeta%/007-cowsay" (goto inregfail)
+goto instdone
+
 :: Uninstallers
 
 :mfpkg-rm-001
@@ -1371,6 +1389,21 @@ del "006-mountvirt" /f /q
 if exist "%pkgMeta%/006-mountvirt" (goto unregfail)
 goto uninstdone
 
+:mfpkg-rm-007
+if not exist "%disk0p1%/mfpkg.mcm" (goto nocommand)
+title MicroflashOS Package Manager
+if not exist "%pkgMeta%/007-cowsay" (call :nopkg)
+echo Uninstalling cowsay (pID 007)
+echo.
+set "curdir=%cd%"
+cd /d "%pkgDir%/"
+del cowsay.mfp /f /q
+if exist "%pkgDir%/cowsay.mfp" (goto uninsfail)
+cd /d "%pkgMeta%"
+del "007-cowsay" /f /q
+if exist "%pkgMeta%/007-cowsay" (goto unregfail)
+goto uninstdone
+
 :: Custom packages
 
 :nuke
@@ -1447,6 +1480,57 @@ set "disk0Label=%1"
 echo Mounted virtual disk.
 echo.
 goto reboot
+
+:: GHETTO SCRIPTED BY PAWS
+
+:cowsay
+if not exist "%pkgDir%/cowsay.mfp" (goto nocommand)
+call :cmdok
+
+setlocal EnableExtensions EnableDelayedExpansion
+
+:: ask for user input 
+set /P "input=Cow says: "
+
+:: get string length to calculate the text box
+
+set "Length=0"
+if not defined input goto OutputLength
+:GetLength
+if not "!input:~%Length%,1!" == "" (
+    set /A Length+=1
+    goto GetLength
+)
+:OutputLength
+echo [cowsay] DEBUG: length of variable input is %Length% >>"%logfile%"
+
+set "Col=%Length%"
+set /a Col+=3
+set "Char=-"
+
+:loop
+set /a loopEx+=1
+set loop=%loop%%char%
+IF "%loopEx%" == "%col%" goto :cow
+goto :loop
+
+:: main cow thing
+
+:cow
+echo. 
+echo %loop%
+echo ^< %input% ^>
+echo %loop%
+echo       \
+echo        \
+echo.
+echo         ^^__^^ 
+echo         (oo)\ ________ 
+echo         (__)\         )\ /\ 
+echo              ^|^|------w^|
+echo              ^|^|      ^|^|
+goto execdone
+
 
 :: Debugging commands
 
@@ -1715,52 +1799,3 @@ pause
 goto :eof
 
 
-:: GHETTO SCRIPTED BY PAWS
-
-:: sorry for the brain damage!
-:: moved OutputLength to a log message, removed stray echo offs and changed :exloop to :cow
-
-:cowsay
-setlocal EnableExtensions EnableDelayedExpansion
-
-:: ask for user input 
-set /P input=Cow says: 
-
-:: get string length to calculate the text box
-
-set "Length=0"
-if not defined input goto OutputLength
-:GetLength
-if not "!input:~%Length%,1!" == "" (
-    set /A Length+=1
-    goto GetLength
-)
-:OutputLength
-echo [cowsay] DEBUG: length of variable input is %Length% >>"%logfile%"
-
-set "Col=%Length%"
-set /a Col+=3
-set "Char=-"
-
-:loop
-set /a loopEx+=1
-set loop=%loop%%char%
-IF "%loopEx%" == "%col%" goto :cow
-goto :loop
-
-:: main cow thing
-
-:cow
-echo. 
-echo %loop%
-echo ^< %input% ^>
-echo %loop%
-echo       \
-echo        \
-echo.
-echo         ^^__^^ 
-echo         (oo)\ ________ 
-echo         (__)\         )\ /\ 
-echo              ^|^|------w^|
-echo              ^|^|      ^|^|
-goto execdone
