@@ -412,7 +412,7 @@ set "command="
 
 :: Command whitelist
 
-set "cmdlist=about help clock clear reboot shutdown mkdir rename delete list cd home homewipe mfpkg mountsys modules toggles nuke dumper winflash mountvirt getargs getvars updater users"
+set "cmdlist=about help clock clear reboot shutdown mkdir rename delete list cd home homewipe mfpkg mountsys modules toggles nuke dumper winflash mountvirt getargs getvars updater users cowsay"
 
 :: receive input from the user:
 
@@ -1715,7 +1715,52 @@ pause
 goto :eof
 
 
+:: GHETTO SCRIPTED BY PAWS
 
+:: sorry for the brain damage!
+:: moved OutputLength to a log message, removed stray echo offs and changed :exloop to :cow
 
+:cowsay
+setlocal EnableExtensions EnableDelayedExpansion
 
+:: ask for user input 
+set /P input=Cow says: 
 
+:: get string length to calculate the text box
+
+set "Length=0"
+if not defined input goto OutputLength
+:GetLength
+if not "!input:~%Length%,1!" == "" (
+    set /A Length+=1
+    goto GetLength
+)
+:OutputLength
+echo [cowsay] DEBUG: length of variable input is %Length% >>"%logfile%"
+
+set "Col=%Length%"
+set /a Col+=3
+set "Char=-"
+
+:loop
+set /a loopEx+=1
+set loop=%loop%%char%
+IF "%loopEx%" == "%col%" goto :cow
+goto :loop
+
+:: main cow thing
+
+:cow
+echo. 
+echo %loop%
+echo ^< %input% ^>
+echo %loop%
+echo       \
+echo        \
+echo.
+echo         ^^__^^ 
+echo         (oo)\ ________ 
+echo         (__)\         )\ /\ 
+echo              ^|^|------w^|
+echo              ^|^|      ^|^|
+goto execdone
